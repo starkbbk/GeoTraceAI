@@ -1,9 +1,16 @@
 import { AnalyticsSnapshot, IdentityProfile } from "@/lib/osint/types";
 
-const searches = new Map<string, IdentityProfile>();
-const savedSearches = new Map<string, { id: string; profileId: string; title: string; notes?: string; createdAt: string }>();
-const watchlist = new Map<string, { id: string; query: string; type: string; notes?: string; createdAt: string; lastSeenAt?: string }>();
-const bookmarks = new Map<string, { id: string; profileId: string; evidenceId?: string; notes?: string; createdAt: string }>();
+const globalStore = globalThis as unknown as {
+  __searches?: Map<string, IdentityProfile>;
+  __savedSearches?: Map<string, any>;
+  __watchlist?: Map<string, any>;
+  __bookmarks?: Map<string, any>;
+};
+
+const searches = globalStore.__searches ?? (globalStore.__searches = new Map<string, IdentityProfile>());
+const savedSearches = globalStore.__savedSearches ?? (globalStore.__savedSearches = new Map<string, any>());
+const watchlist = globalStore.__watchlist ?? (globalStore.__watchlist = new Map<string, any>());
+const bookmarks = globalStore.__bookmarks ?? (globalStore.__bookmarks = new Map<string, any>());
 
 export function saveSearch(profile: IdentityProfile) {
   searches.set(profile.id, profile);
