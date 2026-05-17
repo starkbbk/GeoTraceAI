@@ -209,6 +209,28 @@ export type VehiclePlateIntelligence = {
     lng: number;
     confidenceRadiusKm: number;
   };
+  makeAndModel?: string;
+  ownerNameMasked?: string;
+  carImageUrl?: string;
+  importantDates?: {
+    registrationDate?: string;
+    fitnessUpto?: string;
+    vehicleAge?: string;
+    pollutionUpto?: string;
+    insuranceUpto?: string;
+    insuranceExpiringIn?: string;
+  };
+  otherInfo?: {
+    registrationNo?: string;
+    unloadedWeightKg?: number;
+    rcStatus?: string;
+  };
+  rtoDetails?: {
+    number?: string;
+    registeredRto?: string;
+    state?: string;
+    website?: string;
+  };
   vehicleClassEstimate: {
     value: string;
     confidence: number;
@@ -227,6 +249,7 @@ export type VehiclePlateIntelligence = {
   analysis: string[];
   publicSources: Array<{ label: string; url: string }>;
 };
+
 
 export type DigitalFootprint = {
   socialProfiles: Array<{ platform: string; handle: string; url?: string; confidence: number }>;

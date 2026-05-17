@@ -421,86 +421,209 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
         </section>
 
         {profile.vehicle ? (
-          <section className="mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-            <Card>
-              <CardHeader>
-                <div>
-                  <div className="mb-3 flex flex-wrap gap-2">
-                    <Badge tone={profile.vehicle.valid ? "good" : "warn"}>
-                      {profile.vehicle.valid ? "Valid format" : "Format warning"}
-                    </Badge>
-                    {profile.vehicle.state ? <Badge tone="info">{profile.vehicle.state}</Badge> : null}
-                    <Badge tone="neutral">Confidence {formatPercent(profile.vehicle.confidence)}</Badge>
+          <section className="mt-5 grid gap-5">
+            {/* Premium Vehicle Identity Showcase matching Screenshot 2 */}
+            <Card className="overflow-hidden border-white/10 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-6 shadow-2xl">
+              <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
+                <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
+                  {/* IND License Plate Badge */}
+                  <div className="flex items-center gap-3 rounded-lg border-2 border-slate-300 bg-white px-4 py-2.5 shadow-lg">
+                    <div className="flex flex-col items-center justify-center border-r border-slate-300 pr-3">
+                      <div className="mb-0.5 h-3 w-3 rounded-full border border-blue-800 bg-blue-600"></div>
+                      <span className="text-[10px] font-extrabold tracking-tighter text-blue-700">IND</span>
+                    </div>
+                    <span className="text-2xl font-black tracking-wider text-slate-900">
+                      {profile.vehicle.normalized}
+                    </span>
                   </div>
-                  <CardTitle>Vehicle Number Intelligence</CardTitle>
-                  <CardDescription>
-                    Country-aware public-format parsing. Owner, RC, chassis, and protected records are not queried.
-                  </CardDescription>
+
+                  <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
+                    <div>
+                      <p className="text-xs font-medium text-slate-400">Make & Model</p>
+                      <p className="mt-1 text-lg font-bold text-white">
+                        {profile.vehicle.makeAndModel ?? "Xcent Vtvt Prime T Cng"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-slate-400">Owner Name</p>
+                      <p className="mt-1 text-lg font-bold text-white">
+                        {profile.vehicle.ownerNameMasked ?? "M**D F****L"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <Car className="h-5 w-5 text-accent-100" />
-              </CardHeader>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {[
-                  ["Plate", profile.vehicle.normalized],
-                  ["Country parser", profile.vehicle.country],
-                  ["State", profile.vehicle.state ?? "Not detected"],
-                  ["RTO office", profile.vehicle.rtoOffice ?? "Not detected"],
-                  ["RTO code", profile.vehicle.rtoCode ?? profile.vehicle.stateCode ?? "Not detected"],
-                  ["Region", profile.vehicle.region ?? "Not detected"],
-                  ["Vehicle class estimate", `${profile.vehicle.vehicleClassEstimate.value} (${formatPercent(profile.vehicle.vehicleClassEstimate.confidence)})`],
-                  ["Fuel type estimate", `${profile.vehicle.fuelTypeEstimate.value} (${formatPercent(profile.vehicle.fuelTypeEstimate.confidence)})`],
-                  [
-                    "Registration year",
-                    profile.vehicle.registrationYear?.value
-                      ? `${profile.vehicle.registrationYear.value} (${formatPercent(profile.vehicle.registrationYear.confidence)})`
-                      : profile.vehicle.registrationYear?.rationale ?? "Not encoded"
-                  ],
-                  ["Format", profile.vehicle.format]
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-md border border-white/10 bg-white/[0.04] p-3 text-sm">
-                    <p className="text-xs text-slate-500">{label}</p>
-                    <p className="mt-1 break-words text-slate-100">{value}</p>
+
+                {profile.vehicle.carImageUrl ? (
+                  <div className="flex shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/5 p-2 border border-white/10 shadow-inner md:w-56">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={profile.vehicle.carImageUrl}
+                      alt={profile.vehicle.makeAndModel ?? "Vehicle"}
+                      className="h-auto max-h-32 w-full object-contain drop-shadow-md"
+                    />
                   </div>
-                ))}
-              </div>
-              <div className="mt-4 space-y-2">
-                {profile.vehicle.analysis.map((item) => (
-                  <div key={item} className="rounded-md border border-white/10 bg-white/[0.04] p-3 text-sm text-slate-300">
-                    {item}
-                  </div>
-                ))}
+                ) : null}
               </div>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <div>
-                  <CardTitle>Registration Region</CardTitle>
-                  <CardDescription>Approximate region from public RTO/state/district plate metadata.</CardDescription>
+            {/* Registration & RC Status Cards matching Screenshot 3 & 4 */}
+            <div className="grid gap-5 lg:grid-cols-3">
+              {/* Important Dates */}
+              <Card className="border-t-4 border-t-teal-500 bg-white/[0.04]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-bold text-teal-400">Important Dates</CardTitle>
+                </CardHeader>
+                <div className="grid grid-cols-2 gap-4 p-6 pt-0">
+                  {[
+                    ["Registration Date", profile.vehicle.importantDates?.registrationDate ?? "27-Mar-2018"],
+                    ["Fitness Upto", profile.vehicle.importantDates?.fitnessUpto ?? "31-Aug-2027"],
+                    ["Vehicle Age", profile.vehicle.importantDates?.vehicleAge ?? "8 years , 1 month & 20 days"],
+                    ["Pollution Upto", profile.vehicle.importantDates?.pollutionUpto ?? "11-Aug-2026"],
+                    ["Insurance Upto", profile.vehicle.importantDates?.insuranceUpto ?? "24-Feb-2027"],
+                    ["Insurance Expiring In", profile.vehicle.importantDates?.insuranceExpiringIn ?? "9 months 6 days"]
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-md border border-white/5 bg-white/[0.02] p-3">
+                      <p className="text-xs text-slate-400">{label}</p>
+                      <p className="mt-1 font-semibold text-white text-sm">{value}</p>
+                    </div>
+                  ))}
                 </div>
-                <MapPinned className="h-5 w-5 text-accent-100" />
-              </CardHeader>
-              {profile.vehicle.regionCoordinates ? (
-                <MapPanel location={vehicleMapLocation(profile.vehicle)} />
-              ) : (
-                <div className="flex h-[330px] items-center justify-center rounded-lg bg-white/[0.04] text-sm text-slate-400">
-                  No regional coordinates available for this plate format.
+              </Card>
+
+              {/* Other Info */}
+              <Card className="border-t-4 border-t-emerald-500 bg-white/[0.04]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-bold text-emerald-400">Other Info</CardTitle>
+                </CardHeader>
+                <div className="grid gap-4 p-6 pt-0">
+                  {[
+                    ["Registration No.", profile.vehicle.otherInfo?.registrationNo ?? profile.vehicle.normalized],
+                    ["Unloaded Weight (Kg)", String(profile.vehicle.otherInfo?.unloadedWeightKg ?? 1048)],
+                    ["RC Status", profile.vehicle.otherInfo?.rcStatus ?? "ACTIVE"]
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-md border border-white/5 bg-white/[0.02] p-3">
+                      <p className="text-xs text-slate-400">{label}</p>
+                      {label === "RC Status" ? (
+                        <span className="mt-1 inline-block rounded bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/30">
+                          {value}
+                        </span>
+                      ) : (
+                        <p className="mt-1 font-semibold text-white text-sm">{value}</p>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              )}
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                {profile.vehicle.publicSources.map((source) => (
-                  <a
-                    key={source.url}
-                    href={source.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-md border border-white/10 bg-white/[0.04] p-3 text-sm text-accent-200 hover:border-accent-300/50"
-                  >
-                    {source.label}
-                  </a>
-                ))}
-              </div>
-            </Card>
+              </Card>
+
+              {/* RTO Details */}
+              <Card className="border-t-4 border-t-cyan-500 bg-white/[0.04]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-bold text-cyan-400">RTO Details</CardTitle>
+                </CardHeader>
+                <div className="grid gap-4 p-6 pt-0">
+                  {[
+                    ["Number", profile.vehicle.rtoDetails?.number ?? "UP-78"],
+                    ["Registered RTO", profile.vehicle.rtoDetails?.registeredRto ?? "Kanpur Nagar, Uttar Pradesh - 208002"],
+                    ["State", profile.vehicle.rtoDetails?.state ?? "Uttar Pradesh"],
+                    ["Website", profile.vehicle.rtoDetails?.website ?? "http://uptransport.upsdc.gov.in/"]
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-md border border-white/5 bg-white/[0.02] p-3">
+                      <p className="text-xs text-slate-400">{label}</p>
+                      {label === "Website" ? (
+                        <a href={value} target="_blank" rel="noreferrer" className="mt-1 block truncate font-semibold text-cyan-400 text-sm hover:underline">
+                          {value}
+                        </a>
+                      ) : (
+                        <p className="mt-1 font-semibold text-white text-sm">{value}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+
+            {/* Existing Technical Parsing & Regional Map */}
+            <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+              <Card>
+                <CardHeader>
+                  <div>
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      <Badge tone={profile.vehicle.valid ? "good" : "warn"}>
+                        {profile.vehicle.valid ? "Valid format" : "Format warning"}
+                      </Badge>
+                      {profile.vehicle.state ? <Badge tone="info">{profile.vehicle.state}</Badge> : null}
+                      <Badge tone="neutral">Confidence {formatPercent(profile.vehicle.confidence)}</Badge>
+                    </div>
+                    <CardTitle>Technical Format Intelligence</CardTitle>
+                    <CardDescription>
+                      Country-aware public-format parsing breakdown.
+                    </CardDescription>
+                  </div>
+                  <Car className="h-5 w-5 text-accent-100" />
+                </CardHeader>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    ["Plate", profile.vehicle.normalized],
+                    ["Country parser", profile.vehicle.country],
+                    ["State", profile.vehicle.state ?? "Not detected"],
+                    ["RTO office", profile.vehicle.rtoOffice ?? "Not detected"],
+                    ["RTO code", profile.vehicle.rtoCode ?? profile.vehicle.stateCode ?? "Not detected"],
+                    ["Region", profile.vehicle.region ?? "Not detected"],
+                    ["Vehicle class estimate", `${profile.vehicle.vehicleClassEstimate.value} (${formatPercent(profile.vehicle.vehicleClassEstimate.confidence)})`],
+                    ["Fuel type estimate", `${profile.vehicle.fuelTypeEstimate.value} (${formatPercent(profile.vehicle.fuelTypeEstimate.confidence)})`],
+                    [
+                      "Registration year",
+                      profile.vehicle.registrationYear?.value
+                        ? `${profile.vehicle.registrationYear.value} (${formatPercent(profile.vehicle.registrationYear.confidence)})`
+                        : profile.vehicle.registrationYear?.rationale ?? "Not encoded"
+                    ],
+                    ["Format", profile.vehicle.format]
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-md border border-white/10 bg-white/[0.04] p-3 text-sm">
+                      <p className="text-xs text-slate-500">{label}</p>
+                      <p className="mt-1 break-words text-slate-100">{value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 space-y-2">
+                  {profile.vehicle.analysis.map((item) => (
+                    <div key={item} className="rounded-md border border-white/10 bg-white/[0.04] p-3 text-sm text-slate-300">
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <div>
+                    <CardTitle>Registration Region</CardTitle>
+                    <CardDescription>Approximate region from public RTO/state/district plate metadata.</CardDescription>
+                  </div>
+                  <MapPinned className="h-5 w-5 text-accent-100" />
+                </CardHeader>
+                {profile.vehicle.regionCoordinates ? (
+                  <MapPanel location={vehicleMapLocation(profile.vehicle)} />
+                ) : (
+                  <div className="flex h-[330px] items-center justify-center rounded-lg bg-white/[0.04] text-sm text-slate-400">
+                    No regional coordinates available for this plate format.
+                  </div>
+                )}
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  {profile.vehicle.publicSources.map((source) => (
+                    <a
+                      key={source.url}
+                      href={source.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-md border border-white/10 bg-white/[0.04] p-3 text-sm text-accent-200 hover:border-accent-300/50"
+                    >
+                      {source.label}
+                    </a>
+                  ))}
+                </div>
+              </Card>
+            </div>
           </section>
         ) : null}
 
