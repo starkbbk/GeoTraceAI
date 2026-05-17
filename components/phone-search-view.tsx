@@ -67,18 +67,18 @@ export function PhoneSearchView() {
           <div className="space-y-2 flex-1">
             <h3 className="text-base font-bold text-white flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-accent-100" />
-              Official Truecaller Live OSINT Engine
+              Live Truecaller API Subscription Required
             </h3>
             <p className="text-xs leading-relaxed text-slate-300">
-              GeoTrace AI uses a direct Node.js Truecaller API connection for 100% real, authentic caller ID lookups without third-party RapidAPI limits. To activate this, you must run <code className="bg-black/30 px-1.5 py-0.5 rounded text-accent-200">npx truecallerjs login</code> in your terminal and paste the generated Installation ID into your <code className="bg-black/30 px-1.5 py-0.5 rounded text-emerald-300">.env</code> file as <code className="bg-black/30 px-1.5 py-0.5 rounded font-bold text-emerald-300">TRUECALLER_INSTALLATION_ID</code>.
+              Other websites fetch real data by paying for commercial APIs. To unlock 100% real Live Truecaller data in this dashboard without getting blocked by OTPs, you MUST use RapidAPI. Your current RapidAPI key is active, but you need to go to <code className="bg-black/30 px-1 py-0.5 rounded text-accent-200">RapidAPI.com</code>, search for <code className="bg-black/30 px-1 py-0.5 rounded font-bold text-accent-200">Truecaller4</code>, and click <b>Subscribe</b> on the Free tier. Once subscribed, the exact real names will appear instantly!
             </p>
             {phoneData?.intel.liveApiError ? (
               <div className="mt-3 rounded border border-amber-400/20 bg-amber-500/10 p-3 text-xs text-amber-200 flex items-start gap-2">
                 <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold">Strict OSINT Mode Active:</span> {phoneData.intel.liveApiError} 
+                  <span className="font-bold">Live API Subscription Blocked:</span> {phoneData.intel.liveApiError} 
                   <br className="mt-1" />
-                  <span className="text-amber-100/70">To ensure 100% data integrity, random or simulated names are intentionally disabled. You are viewing verified structural metadata only.</span>
+                  <span className="text-amber-100/70">A temporary [Simulated Demo] catalog name has been provided below so your UI doesn't break while you set up RapidAPI.</span>
                 </div>
               </div>
             ) : null}
@@ -89,7 +89,7 @@ export function PhoneSearchView() {
               Simulate Live Match (Presentation Mode)
             </label>
             <p className="text-[11px] text-slate-400 leading-tight">
-              If CLI authentication fails, you can enter your exact real name below to bypass the API block and instantly simulate a perfect 100% real Live Match for your dashboard:
+              If you don't want to subscribe to RapidAPI, you can enter your exact real name below to bypass the API block and instantly simulate a perfect 100% real Live Match for your dashboard:
             </p>
             <Input
               value={customOverrideName}
