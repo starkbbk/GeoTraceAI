@@ -26,7 +26,7 @@ export function normalizeSearchInput(input: SearchInput): NormalizedInput {
   const normalizedIp = normalizeIp(input.ipAddress);
   const normalizedUsername = input.username?.trim().replace(/^@/, "").toLowerCase();
   const normalizedPincode = input.pincode?.replace(/\s+/g, "").toUpperCase();
-  const phone = normalizePhone(input.phone, input.country);
+  const phone = normalizePhone(input.phone, input.country ?? "IN");
   const inferredCountry = inferCountry(input, phone.normalizedPhone, normalizedPincode, phone.phoneCountry);
   const signals = buildSignals(input);
 

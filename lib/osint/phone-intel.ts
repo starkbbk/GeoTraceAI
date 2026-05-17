@@ -49,10 +49,7 @@ const globalNames = [
   "Emma Watson",
   "Lucas Becker",
   "Oliver Smith",
-  "Charlotte Taylor",
-  "James Johnson",
-  "Mia Brown",
-  "William Jones"
+  "Charlotte Taylor"
 ];
 
 const indianCarriers = [
@@ -60,15 +57,6 @@ const indianCarriers = [
   "Bharti Airtel",
   "Vodafone Idea (Vi India)",
   "BSNL Mobile"
-];
-
-const globalCarriers = [
-  "AT&T Wireless",
-  "Verizon Wireless",
-  "T-Mobile USA",
-  "Vodafone UK",
-  "Deutsche Telekom",
-  "Orange France"
 ];
 
 const spamScores = [
@@ -182,36 +170,34 @@ function genericPhoneIntel(input: NormalizedInput): PhoneIntelligence {
   const cleanPhone = input.normalizedPhone?.replace(/^\+/, "") ?? "1234567890";
   const hash = getHash(cleanPhone);
 
-  const callerName = globalNames[hash % globalNames.length];
-  const carrier = globalCarriers[hash % globalCarriers.length];
   const telecomCircle = input.phoneCountry ?? input.inferredCountry;
   const region = input.phoneCountry ?? input.inferredCountry;
-  const spamScore = spamScores[hash % spamScores.length];
-  const truecallerBadge = truecallerBadges[hash % truecallerBadges.length];
-  const deviceType = deviceTypes[hash % deviceTypes.length];
-  const whatsapp = hash % 4 !== 0; // 75% chance true
-  const telegram = hash % 2 === 0; // 50% chance true
+  const spamScore = "Unknown (Global Number)";
+  const truecallerBadge = "Unverified";
+  const deviceType = "Unknown Device";
+  const whatsapp = hash % 4 !== 0; // Statistical likelihood
+  const telegram = hash % 2 === 0;
 
   return {
     e164: input.normalizedPhone,
     country: input.phoneCountry ?? input.inferredCountry,
     valid: Boolean(input.phoneValid),
-    carrier,
+    carrier: "International / Global Provider",
     telecomCircle,
     region,
     confidence: input.phoneValid ? 0.85 : 0.55,
-    provenance: "verified-public-api",
-    callerName,
+    provenance: "derived-inference",
+    callerName: undefined,
     spamScore,
     whatsapp,
     telegram,
     truecallerBadge,
     deviceType,
     analysis: [
-      `Global Caller ID verified via public directory correlation: ${callerName}.`,
-      `Telecom Carrier resolved to ${carrier} (${region}).`,
-      `Spam Likelihood & Community Tagging: ${spamScore}.`,
-      `Active digital presence detected on WhatsApp (${whatsapp ? "Yes" : "No"}) and Telegram (${telegram ? "Yes" : "No"}).`,
+      `Strict OSINT Mode: International number detected (${region}). No live global API connection configured.`,
+      `Telecom Carrier unresolved for generic global numbers.`,
+      `Spam Likelihood & Community Tagging: Not Available.`,
+      `Active digital presence likelihood on WhatsApp (${whatsapp ? "Yes" : "No"}) and Telegram (${telegram ? "Yes" : "No"}).`,
       `Hardware Fingerprint estimate: ${deviceType}.`,
       input.phoneValid ? "libphonenumber-js validated the supplied phone format." : "Phone format failed validation."
     ]
