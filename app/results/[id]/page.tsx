@@ -362,29 +362,49 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
             <CardHeader>
               <div>
                 <CardTitle>Contact Intelligence</CardTitle>
-                <CardDescription>Phone, telecom region, domain reputation, and disposable email checks.</CardDescription>
+                <CardDescription>Verified Truecaller Caller ID, telecom circle, domain reputation, and digital presence.</CardDescription>
               </div>
               <Phone className="h-5 w-5 text-accent-100" />
             </CardHeader>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {[
-                ["Phone", profile.phoneIntel?.e164 ?? "Not supplied"],
-                ["Phone country", profile.phoneIntel?.country ?? "Unknown"],
-                ["Carrier/provider", profile.phoneIntel?.carrier ?? "Not verified"],
-                ["Telecom circle", profile.phoneIntel?.telecomCircle ?? "Not inferred"],
-                ["Phone region", profile.phoneIntel?.region ?? "Unknown"],
-                ["Domain", profile.domainIntel?.domain ?? "Not supplied"],
-                ["Domain category", profile.domainIntel?.category ?? "Unknown"],
-                ["Disposable email", profile.domainIntel ? (profile.domainIntel.disposable ? "Yes" : "No") : "Unknown"]
+                ["Phone Number", profile.phoneIntel?.e164 ?? "Not supplied"],
+                ["Caller ID (Truecaller)", profile.phoneIntel?.callerName ?? "Not verified"],
+                ["Spam Likelihood", profile.phoneIntel?.spamScore ?? "Unknown"],
+                ["Carrier / Provider", profile.phoneIntel?.carrier ?? "Not verified"],
+                ["Telecom Circle", profile.phoneIntel?.telecomCircle ?? "Not inferred"],
+                ["Device / Hardware", profile.phoneIntel?.deviceType ?? "Unknown"],
+                ["WhatsApp Presence", profile.phoneIntel ? (profile.phoneIntel.whatsapp ? "Active / Registered" : "Not Registered") : "Unknown"],
+                ["Telegram Presence", profile.phoneIntel ? (profile.phoneIntel.telegram ? "Active / Registered" : "Not Registered") : "Unknown"],
+                ["Email Domain", profile.domainIntel?.domain ?? "Not supplied"],
+                ["Email Owner", profile.domainIntel?.ownerName ?? "Not verified"],
+                ["Deliverability", profile.domainIntel?.deliverability ?? "Unknown"],
+                ["Disposable Email", profile.domainIntel ? (profile.domainIntel.disposable ? "Yes (Temporary)" : "No (Clean)") : "Unknown"],
+                ["SPF Verification", profile.domainIntel?.spfStatus ?? "Unknown"],
+                ["DMARC Policy", profile.domainIntel?.dmarcStatus ?? "Unknown"]
               ].map(([label, value]) => (
                 <div key={label} className="rounded-md border border-white/10 bg-white/[0.04] p-3 text-sm">
                   <p className="text-xs text-slate-500">{label}</p>
-                  <p className="mt-1 break-words text-slate-100">{value}</p>
+                  <p className="mt-1 break-words font-medium text-slate-100">{value}</p>
                 </div>
               ))}
             </div>
+
+            {profile.domainIntel?.darkWebBreaches?.length ? (
+              <div className="mt-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-red-400 mb-2">Dark Web & Public Breach Dumps</p>
+                <div className="flex flex-wrap gap-2">
+                  {profile.domainIntel.darkWebBreaches.map((breach) => (
+                    <span key={breach} className="rounded bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-400 border border-red-500/20">
+                      {breach}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             <div className="mt-4 space-y-2">
-              {[...(profile.phoneIntel?.analysis ?? []), ...(profile.domainIntel?.analysis ?? [])].slice(0, 5).map((item) => (
+              {[...(profile.phoneIntel?.analysis ?? []), ...(profile.domainIntel?.analysis ?? [])].slice(0, 6).map((item) => (
                 <div key={item} className="rounded-md border border-white/10 bg-white/[0.04] p-3 text-sm text-slate-300">
                   {item}
                 </div>

@@ -95,6 +95,12 @@ export type PhoneIntelligence = {
   confidence: number;
   provenance: Provenance;
   analysis: string[];
+  callerName?: string;
+  spamScore?: string;
+  whatsapp?: boolean;
+  telegram?: boolean;
+  truecallerBadge?: string;
+  deviceType?: string;
 };
 
 export type DomainIntelligence = {
@@ -105,6 +111,15 @@ export type DomainIntelligence = {
   confidence: number;
   mxCheck: "not-run" | "configured" | "unavailable";
   analysis: string[];
+  ownerName?: string;
+  gravatarUrl?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  darkWebBreaches?: string[];
+  mxRecords?: string[];
+  spfStatus?: string;
+  dmarcStatus?: string;
+  deliverability?: string;
 };
 
 export type PublicAvatar = {
