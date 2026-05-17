@@ -149,7 +149,7 @@ async function indiaPhoneIntel(input: NormalizedInput): Promise<PhoneIntelligenc
   const landline = indiaCircles.find((circle) => circle.codes.some((code) => national.startsWith(code)));
   const isMobile = /^[6-9]\d{9}$/.test(national);
 
-  const live = await lookupPhoneTruecaller(input.normalizedPhone ?? "");
+  const live = await lookupPhoneTruecaller(input.normalizedPhone ?? "", input.customOverrideName);
 
   return {
     e164: input.normalizedPhone,
@@ -166,6 +166,7 @@ async function indiaPhoneIntel(input: NormalizedInput): Promise<PhoneIntelligenc
     telegram: live.telegram,
     truecallerBadge: live.truecallerBadge,
     deviceType: live.deviceType,
+    liveApiError: live.liveApiError,
     analysis: [
       `Caller ID verified via Truecaller live directory correlation: ${live.callerName}.`,
       `Telecom Operator resolved to ${live.carrier} in ${live.telecomCircle} circle.`,

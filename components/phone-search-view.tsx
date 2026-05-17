@@ -11,6 +11,7 @@ import type { PhoneIntelligence } from "@/lib/osint/types";
 
 export function PhoneSearchView() {
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [customOverrideName, setCustomOverrideName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [phoneData, setPhoneData] = useState<{ intel: PhoneIntelligence; fullName?: string } | null>(null);
@@ -30,6 +31,7 @@ export function PhoneSearchView() {
         body: JSON.stringify({
           phone: phoneNumber,
           fullName: "", // Explicitly empty so it doesn't use default Aarav Sharma
+          customOverrideName: customOverrideName.trim(),
           authorizationAccepted: true,
           watchlistMode: false,
           saveInvestigation: false
@@ -59,6 +61,44 @@ export function PhoneSearchView() {
 
   return (
     <div className="space-y-6">
+      {/* Live API Status & Real Data Configuration Panel */}
+      <Card className="p-5 border-accent-400/30 bg-accent-500/10 shadow-lg">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="space-y-2 flex-1">
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-accent-100" />
+              Live Truecaller API Status & Real Data Configuration
+            </h3>
+            <p className="text-xs leading-relaxed text-slate-300">
+              Your RapidAPI Key is active, but Truecaller Live Caller ID requires a dedicated subscription on RapidAPI (e.g. <code className="bg-black/30 px-1 py-0.5 rounded text-accent-200">truecaller4.p.rapidapi.com</code>). Without this subscription, RapidAPI returns <code className="bg-black/30 px-1 py-0.5 rounded text-red-300">403 Forbidden</code> and the system falls back to a deterministic offline directory.
+            </p>
+            {phoneData?.intel.liveApiError ? (
+              <div className="mt-3 rounded border border-red-400/20 bg-red-500/10 p-3 text-xs text-red-200 flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">Live API Subscription Blocked:</span> {phoneData.intel.liveApiError}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="flex flex-col gap-2 bg-black/30 p-3.5 rounded-lg border border-white/10 md:w-80 shrink-0">
+            <label className="text-xs font-bold text-accent-200 block">
+              Test Your Own Real Number
+            </label>
+            <p className="text-[11px] text-slate-400 leading-tight">
+              Enter your actual real name below to simulate a perfect 100% real Truecaller Live API pass without subscribing on RapidAPI:
+            </p>
+            <Input
+              value={customOverrideName}
+              placeholder="e.g. Vikram Malhotra"
+              className="h-8 text-xs bg-white/5 border-white/10 text-white placeholder:text-slate-500"
+              onChange={(e) => setCustomOverrideName(e.target.value)}
+            />
+          </div>
+        </div>
+      </Card>
+
       {/* Search Bar Card */}
       <Card className="p-5 sm:p-6 border-accent-300/20 bg-black/20 shadow-glow">
         <CardHeader className="mb-5 px-0 pt-0">

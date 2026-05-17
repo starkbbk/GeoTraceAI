@@ -15,6 +15,7 @@ export type SearchInput = {
   notes?: string;
   authorizationAccepted?: boolean;
   turnstileToken?: string;
+  customOverrideName?: string;
 };
 
 export type NormalizedInput = SearchInput & {
@@ -31,6 +32,7 @@ export type NormalizedInput = SearchInput & {
   normalizedPincode?: string;
   signals: string[];
   confidence: number;
+  customOverrideName?: string;
 };
 
 export type SourceEvidence = {
@@ -101,6 +103,7 @@ export type PhoneIntelligence = {
   telegram?: boolean;
   truecallerBadge?: string;
   deviceType?: string;
+  liveApiError?: string;
 };
 
 export type DomainIntelligence = {

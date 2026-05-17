@@ -25,7 +25,8 @@ const schema = z
     watchlistMode: z.boolean().optional(),
     saveInvestigation: z.boolean().optional(),
     authorizationAccepted: z.boolean(),
-    turnstileToken: z.string().optional()
+    turnstileToken: z.string().optional(),
+    customOverrideName: z.string().max(140).optional().or(z.literal(""))
   })
   .refine((value) => Object.entries(value).some(([key, item]) => key !== "authorizationAccepted" && Boolean(item)), {
     message: "Provide at least one search signal."
