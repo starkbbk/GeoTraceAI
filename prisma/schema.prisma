@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ANALYST
+  ADMIN
+}
+
+enum InvestigationStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  name           String?
+  role           UserRole        @default(ANALYST)
+  createdAt      DateTime        @default(now())
+  investigations Investigation[]
+  auditLogs      AuditLog[]
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+}
+
+model Investigation {
+  id             String              @id @default(cuid())
+  userId         String?
+  user           User?               @relation(fields: [userId], references: [id])
+  status         InvestigationStatus @default(QUEUED)
+  query          Json
+  normalized     Json
+  profile        Json?
+  confidence     Float               @default(0)
+  riskReputation String              @default("unknown")
+  exposure      Json?
+  watchlistMode Boolean              @default(false)
+  analystNotes  String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  evidence       Evidence[]
+
+  @@index([createdAt])
+  @@index([riskReputation])
+}
+
+model WatchlistItem {
+  id          String   @id @default(cuid())
+  query       String
+  type        String
+  notes       String?
+  lastSeenAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([query])
+}
+
+model InvestigationBookmark {
+  id              String   @id @default(cuid())
+  investigationId String
+  evidenceId      String?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  @@index([investigationId])
+}
+
+model Evidence {
+  id              String        @id @default(cuid())
+  investigationId String
+  investigation   Investigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
+  source          String
+  type            String
+  title           String
+  url             String?
+  summary         String
+  confidence      Float
+  fields          Json?
+  legalBasis      String
+  collectedAt     DateTime
+
+  @@index([source])
+  @@index([type])
+}
+
+model SavedInvestigation {
+  id              String   @id @default(cuid())
+  investigationId String
+  title           String
+  notes           String?
+  createdAt       DateTime @default(now())
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  name       String
+  keyHash    String    @unique
+  scopes     String[]
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  actor     String
+  action    String
+  target    String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+}
