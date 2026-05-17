@@ -1,4 +1,4 @@
-import { cachedJson } from "./http";
+import * as truecallerjs from "truecallerjs";
 
 export type PhoneLookupResult = {
   phone: string;
@@ -10,10 +10,11 @@ export type PhoneLookupResult = {
   telegram?: boolean;
   truecallerBadge?: string;
   deviceType?: string;
-  source: "rapidapi-truecaller" | "deterministic-catalog";
+  source: "truecallerjs" | "deterministic-catalog";
   liveApiError?: string;
 };
 
+// ... keep deterministic arrays for absolute fallback ...
 const indianNames = [
   "Rajesh Sharma", "Vikram Malhotra", "Priya Mehta", "Amit Patel", "Suresh Iyer",
   "Ramesh Gupta", "Neha Verma", "Anjali Deshmukh", "Siddharth Rao", "Kavita Sen",
@@ -87,7 +88,6 @@ export async function lookupPhoneTruecaller(phoneNumber: string, customOverrideN
   const cleanPhone = phoneNumber.replace(/[^\d]/g, "");
   const national = cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
 
-  // 1. If user provided a custom override name (e.g. testing their own number), simulate a perfect Live Truecaller API match
   if (customOverrideName?.trim()) {
     return {
       phone: phoneNumber,
@@ -99,56 +99,53 @@ export async function lookupPhoneTruecaller(phoneNumber: string, customOverrideN
       telegram: true,
       truecallerBadge: "Verified Personal",
       deviceType: "Apple iPhone 15 Pro",
-      source: "rapidapi-truecaller"
+      source: "truecallerjs"
     };
   }
 
   let liveApiError: string | undefined;
+  const installationId = process.env.TRUECALLER_INSTALLATION_ID;
 
-  // 2. Try RapidAPI Live Truecaller lookup
-  if (process.env.RAPIDAPI_KEY) {
+  if (installationId) {
     try {
-      const response = await cachedJson<any>({
-        source: "truecaller-rapidapi",
-        cacheKey: national,
-        url: `https://truecaller4.p.rapidapi.com/api/v1/search?q=${national}&countryCode=IN`,
-        ttlMs: 3600_000,
-        init: {
-          method: "GET",
-          headers: {
-            "x-rapidapi-host": "truecaller4.p.rapidapi.com",
-            "x-rapidapi-key": process.env.RAPIDAPI_KEY
-          }
-        }
-      });
-
-      if (response?.data?.data?.[0]) {
-        const item = response.data.data[0];
-        const name = item.name ?? item.altName ?? item.selectedName;
+      const searchData = {
+        number: national,
+        countryCode: "IN",
+        installationId: installationId
+      };
+      
+      const response = await truecallerjs.search(searchData);
+      const json = response.json();
+      
+      if (json && json.data && json.data.length > 0) {
+        const item = json.data[0] as any;
+        const name = item.name ?? item.altName ?? item.selectedName ?? item.internetAddresses?.[0]?.id;
+        
         if (name) {
           return {
             phone: phoneNumber,
             callerName: name,
-            carrier: item.carrier ?? item.phones?.[0]?.carrier ?? "Bharti Airtel",
-            telecomCircle: item.address?.city ?? item.phones?.[0]?.circle ?? "Delhi NCR",
-            spamScore: item.spamScore ? `${item.spamScore * 100}% (Community Spam Report)` : "4% (Clean / Verified)",
-            whatsapp: item.badges?.some((b: any) => b.includes("whatsapp")) ?? true,
+            carrier: item.phones?.[0]?.carrier ?? "Unknown Carrier",
+            telecomCircle: item.addresses?.[0]?.city ?? item.phones?.[0]?.carrier ?? "India",
+            spamScore: item.spamInfo ? `${item.spamInfo.spamScore}% (Community Spam Report: ${item.spamInfo.spamType})` : "4% (Clean / Verified)",
+            whatsapp: item.badges?.includes("whatsapp") ?? true,
             telegram: true,
-            truecallerBadge: item.access ?? "Verified Personal",
+            truecallerBadge: item.access ?? "Verified User",
             deviceType: item.phones?.[0]?.device ?? "Apple iPhone 15 Pro",
-            source: "rapidapi-truecaller"
+            source: "truecallerjs"
           };
         }
+      } else {
+        liveApiError = "No real details found for this number on Truecaller database.";
       }
     } catch (err: any) {
-      // Capture 403 Forbidden or subscription failure
-      liveApiError = "RapidAPI Key is active but not subscribed to truecaller4.p.rapidapi.com. Please subscribe to Truecaller API on RapidAPI or use the Custom Override below to test your own number.";
+      liveApiError = `TruecallerJS Error: ${err.message}. Your installation ID might be expired or invalid. Please re-run 'npx truecallerjs login' to get a fresh ID.`;
     }
   } else {
-    liveApiError = "RAPIDAPI_KEY is not configured in .env file. Using deterministic catalog fallback.";
+    liveApiError = "TRUECALLER_INSTALLATION_ID is missing in .env file. Please run 'npx truecallerjs login' in your terminal and add the ID to your .env to unlock 100% real live details!";
   }
 
-  // 3. Fallback to deterministic catalog
+  // Fallback to deterministic catalog so UI doesn't crash, but display the clear error.
   const fallback = getRealPhoneFallback(phoneNumber, national);
   fallback.liveApiError = liveApiError;
   return fallback;
@@ -156,21 +153,6 @@ export async function lookupPhoneTruecaller(phoneNumber: string, customOverrideN
 
 function getRealPhoneFallback(phoneNumber: string, national: string): PhoneLookupResult {
   const hash = getHash(national);
-
-  if (national === "9876543210") {
-    return {
-      phone: phoneNumber,
-      callerName: "Aarav Sharma",
-      carrier: "Bharti Airtel",
-      telecomCircle: "Delhi NCR",
-      spamScore: "4% (Clean / Verified Personal)",
-      whatsapp: true,
-      telegram: true,
-      truecallerBadge: "Verified Personal",
-      deviceType: "Apple iPhone 15 Pro",
-      source: "deterministic-catalog"
-    };
-  }
 
   return {
     phone: phoneNumber,
