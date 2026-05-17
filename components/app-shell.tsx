@@ -1,16 +1,18 @@
 import Link from "next/link";
-import { Bell, Braces, DatabaseZap, Eye, LayoutDashboard, Radar, ShieldCheck } from "lucide-react";
+import { Bell, Braces, Car, DatabaseZap, Eye, LayoutDashboard, Radar, ShieldCheck } from "lucide-react";
 import { Show, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { isClerkConfigured } from "@/lib/security/clerk-config";
 
 const nav = [
   { href: "/", label: "Exposure Search", icon: Radar },
+  { href: "/vehicle-info", label: "Vehicle Info", icon: Car },
   { href: "/dashboard", label: "Breach Intel", icon: LayoutDashboard },
   { href: "/results/demo", label: "Watchlist", icon: Eye },
   { href: "/docs", label: "API Docs", icon: Braces },
   { href: "/admin", label: "Admin", icon: ShieldCheck }
 ];
+
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -104,15 +106,15 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       </header>
       <div className="lg:pl-72">{children}</div>
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-bg/90 px-2 py-2 backdrop-blur-xl md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
-          {nav.slice(0, 4).map((item) => (
+        <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+          {nav.slice(0, 5).map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="flex flex-col items-center gap-1 rounded-md px-2 py-2 text-[11px] text-slate-300"
+              className="flex flex-col items-center gap-1 rounded-md px-1.5 py-2 text-[10px] text-slate-300 transition hover:text-white"
             >
               <item.icon className="h-4 w-4" />
-              {item.label}
+              <span className="truncate w-full text-center">{item.label}</span>
             </Link>
           ))}
         </div>
