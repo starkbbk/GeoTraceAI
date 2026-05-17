@@ -10,79 +10,9 @@ export type PhoneLookupResult = {
   telegram?: boolean;
   truecallerBadge?: string;
   deviceType?: string;
-  source: "truecallerjs" | "deterministic-catalog";
+  source: "truecallerjs" | "strict-osint";
   liveApiError?: string;
 };
-
-// ... keep deterministic arrays for absolute fallback ...
-const indianNames = [
-  "Rajesh Sharma", "Vikram Malhotra", "Priya Mehta", "Amit Patel", "Suresh Iyer",
-  "Ramesh Gupta", "Neha Verma", "Anjali Deshmukh", "Siddharth Rao", "Kavita Sen",
-  "Manish Tiwari", "Sunita Agarwal", "Deepak Chopra", "Pooja Joshi", "Arun Kumar",
-  "Vijay Yadav", "Sanjay Singh", "Sunil Sharma", "Anita Mishra", "Rekha Jain",
-  "Dinesh Patel", "Mahesh Reddy", "Kiran Kulkarni", "Geeta Nair", "Ashok Sen",
-  "Prakash Rao", "Laxmi Narayan", "Gaurav Joshi", "Meena Kumari", "Nitin Gadkari",
-  "Ravi Shastri", "Sushma Swaraj", "Vinod Khanna", "Yash Chopra", "Zakir Hussain",
-  "Ajay Devgn", "Bipasha Basu", "Chetan Bhagat", "Dharmendra Deol", "Ekta Kapoor",
-  "Farhan Akhtar", "Govinda Ahuja", "Hrithik Roshan", "Irrfan Khan", "Juhi Chawla",
-  "Karisma Kapoor", "Lata Mangeshkar", "Madhuri Dixit", "Naseeruddin Shah", "Om Puri"
-];
-
-const indianCarriers = [
-  "Reliance Jio Infocomm",
-  "Bharti Airtel",
-  "Vodafone Idea (Vi India)",
-  "BSNL Mobile"
-];
-
-const indianCircles = [
-  "Delhi NCR", "Mumbai", "Karnataka", "Maharashtra & Goa", "Tamil Nadu",
-  "Andhra Pradesh & Telangana", "Gujarat", "UP East", "Kolkata", "Kerala",
-  "Punjab", "Rajasthan", "UP West", "Madhya Pradesh", "Bihar & Jharkhand", "Haryana"
-];
-
-const spamScores = [
-  "4% (Clean / Verified Personal)",
-  "12% (Low Risk / Regular User)",
-  "85% (Marked as Telemarketer / Spam by 42 users)",
-  "3% (Clean / Verified Business)",
-  "67% (Reported Spam / Robocall)",
-  "2% (Verified Government / Utility)",
-  "91% (High Risk / Potential Scam Report)",
-  "18% (Low Risk / Delivery Partner)",
-  "5% (Clean / Verified Healthcare)"
-];
-
-const truecallerBadges = [
-  "Verified Business",
-  "Community Spam",
-  "Regular User",
-  "Priority Caller",
-  "Verified Personal",
-  "Verified Expert"
-];
-
-const deviceTypes = [
-  "Apple iPhone 15 Pro",
-  "Samsung Galaxy S24 Ultra",
-  "OnePlus 12",
-  "Xiaomi 14",
-  "Vivo X100",
-  "Apple iPhone 14",
-  "Samsung Galaxy Z Fold 5",
-  "Google Pixel 8 Pro",
-  "Nothing Phone 2",
-  "Realme GT 5"
-];
-
-function getHash(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
 
 export async function lookupPhoneTruecaller(phoneNumber: string, customOverrideName?: string): Promise<PhoneLookupResult> {
   const cleanPhone = phoneNumber.replace(/[^\d]/g, "");
@@ -146,24 +76,22 @@ export async function lookupPhoneTruecaller(phoneNumber: string, customOverrideN
   }
 
   // Fallback to deterministic catalog so UI doesn't crash, but display the clear error.
-  const fallback = getRealPhoneFallback(phoneNumber, national);
+  const fallback = getStrictOsintFallback(phoneNumber, national);
   fallback.liveApiError = liveApiError;
   return fallback;
 }
 
-function getRealPhoneFallback(phoneNumber: string, national: string): PhoneLookupResult {
-  const hash = getHash(national);
-
+function getStrictOsintFallback(phoneNumber: string, national: string): PhoneLookupResult {
   return {
     phone: phoneNumber,
-    callerName: indianNames[hash % indianNames.length],
-    carrier: indianCarriers[hash % indianCarriers.length],
-    telecomCircle: indianCircles[hash % indianCircles.length],
-    spamScore: spamScores[hash % spamScores.length],
-    whatsapp: hash % 5 !== 0,
-    telegram: hash % 3 !== 0,
-    truecallerBadge: truecallerBadges[hash % truecallerBadges.length],
-    deviceType: deviceTypes[hash % deviceTypes.length],
-    source: "deterministic-catalog"
+    callerName: undefined,
+    carrier: "Network Provider Unverified",
+    telecomCircle: "Telecom Circle Unverified",
+    spamScore: "Unknown (API Authentication Failed)",
+    whatsapp: undefined,
+    telegram: undefined,
+    truecallerBadge: "Unverified",
+    deviceType: "Unknown Device",
+    source: "strict-osint"
   };
 }

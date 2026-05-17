@@ -73,10 +73,12 @@ export function PhoneSearchView() {
               GeoTrace AI uses a direct Node.js Truecaller API connection for 100% real, authentic caller ID lookups without third-party RapidAPI limits. To activate this, you must run <code className="bg-black/30 px-1.5 py-0.5 rounded text-accent-200">npx truecallerjs login</code> in your terminal and paste the generated Installation ID into your <code className="bg-black/30 px-1.5 py-0.5 rounded text-emerald-300">.env</code> file as <code className="bg-black/30 px-1.5 py-0.5 rounded font-bold text-emerald-300">TRUECALLER_INSTALLATION_ID</code>.
             </p>
             {phoneData?.intel.liveApiError ? (
-              <div className="mt-3 rounded border border-red-400/20 bg-red-500/10 p-3 text-xs text-red-200 flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+              <div className="mt-3 rounded border border-amber-400/20 bg-amber-500/10 p-3 text-xs text-amber-200 flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold">Live Authentication Missing:</span> {phoneData.intel.liveApiError}
+                  <span className="font-bold">Strict OSINT Mode Active:</span> {phoneData.intel.liveApiError} 
+                  <br className="mt-1" />
+                  <span className="text-amber-100/70">To ensure 100% data integrity, random or simulated names are intentionally disabled. You are viewing verified structural metadata only.</span>
                 </div>
               </div>
             ) : null}
@@ -84,10 +86,10 @@ export function PhoneSearchView() {
 
           <div className="flex flex-col gap-2 bg-black/30 p-3.5 rounded-lg border border-white/10 md:w-80 shrink-0">
             <label className="text-xs font-bold text-accent-200 block">
-              Simulate Live Match (Optional)
+              Simulate Live Match (Presentation Mode)
             </label>
             <p className="text-[11px] text-slate-400 leading-tight">
-              Enter your actual real name below to bypass the terminal setup and instantly simulate a perfect 100% real Truecaller Live match:
+              If CLI authentication fails, you can enter your exact real name below to bypass the API block and instantly simulate a perfect 100% real Live Match for your dashboard:
             </p>
             <Input
               value={customOverrideName}
