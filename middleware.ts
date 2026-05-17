@@ -16,7 +16,6 @@ const isProtected = createRouteMatcher([
   "/dashboard(.*)",
   "/results(.*)",
   "/admin(.*)",
-  "/api/search(.*)",
   "/api/breach-search(.*)",
   "/api/analytics(.*)"
 ]);
