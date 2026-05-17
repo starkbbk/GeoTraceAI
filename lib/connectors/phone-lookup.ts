@@ -69,20 +69,21 @@ export async function lookupPhoneTruecaller(phoneNumber: string, customOverrideN
       const response = await cachedJson<any>({
         source: "truecaller-rapidapi",
         cacheKey: national,
-        url: `https://truecaller4.p.rapidapi.com/api/v1/search?q=${national}&countryCode=IN`,
+        url: `https://truecaller-data2.p.rapidapi.com/search/${national}`,
         ttlMs: 3600_000,
         init: {
           method: "GET",
           headers: {
-            "x-rapidapi-host": "truecaller4.p.rapidapi.com",
+            "x-rapidapi-host": "truecaller-data2.p.rapidapi.com",
             "x-rapidapi-key": process.env.RAPIDAPI_KEY
           }
         }
       });
 
-      if (response?.data?.data?.[0]) {
-        const item = response.data.data[0];
-        const name = item.name ?? item.altName ?? item.selectedName;
+      // Handle both { data: [...] } format and direct object format
+      const item = response?.data?.data?.[0] ?? response?.data;
+      if (item) {
+        const name = item.name ?? item.altName ?? item.selectedName ?? item.callerName;
         if (name) {
           return {
             phone: phoneNumber,
@@ -90,7 +91,7 @@ export async function lookupPhoneTruecaller(phoneNumber: string, customOverrideN
             carrier: item.carrier ?? item.phones?.[0]?.carrier ?? "Unknown Carrier",
             telecomCircle: item.address?.city ?? item.phones?.[0]?.circle ?? "India",
             spamScore: item.spamScore ? `${item.spamScore * 100}% (Community Spam Report)` : "4% (Clean / Verified)",
-            whatsapp: item.badges?.some((b: any) => b.includes("whatsapp")) ?? true,
+            whatsapp: item.badges?.some((b: any) => typeof b === 'string' && b.includes("whatsapp")) ?? true,
             telegram: true,
             truecallerBadge: item.access ?? "Verified Personal",
             deviceType: item.phones?.[0]?.device ?? "Apple iPhone",
@@ -99,7 +100,7 @@ export async function lookupPhoneTruecaller(phoneNumber: string, customOverrideN
         }
       }
     } catch (err: any) {
-      liveApiError = "RapidAPI Key is active, but requires you to click 'Subscribe' to the FREE tier of 'Truecaller4' on RapidAPI.com.";
+      liveApiError = "RapidAPI Key is active, but you must click 'Subscribe' to the API named 'Truecaller Data' by 'do3t' on RapidAPI.com.";
     }
   } else {
     liveApiError = "RAPIDAPI_KEY is missing in .env file.";

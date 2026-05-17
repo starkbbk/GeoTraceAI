@@ -70,7 +70,7 @@ export function PhoneSearchView() {
               Live Truecaller API Subscription Required
             </h3>
             <p className="text-xs leading-relaxed text-slate-300">
-              Other websites fetch real data by paying for commercial APIs. To unlock 100% real Live Truecaller data in this dashboard without getting blocked by OTPs, you MUST use RapidAPI. Your current RapidAPI key is active, but you need to go to <code className="bg-black/30 px-1 py-0.5 rounded text-accent-200">RapidAPI.com</code>, search for <code className="bg-black/30 px-1 py-0.5 rounded font-bold text-accent-200">Truecaller4</code>, and click <b>Subscribe</b> on the Free tier. Once subscribed, the exact real names will appear instantly!
+              Other websites fetch real data by paying for commercial APIs. To unlock 100% real Live Truecaller data in this dashboard without getting blocked by OTPs, you MUST use RapidAPI. Your current RapidAPI key is active, but you need to go to <code className="bg-black/30 px-1 py-0.5 rounded text-accent-200">RapidAPI.com</code>, search for <code className="bg-black/30 px-1 py-0.5 rounded font-bold text-accent-200">Truecaller Data</code> (by provider <b>do3t</b>), and click <b>Subscribe</b>. Once subscribed, the exact real names will appear instantly!
             </p>
             {phoneData?.intel.liveApiError ? (
               <div className="mt-3 rounded border border-amber-400/20 bg-amber-500/10 p-3 text-xs text-amber-200 flex items-start gap-2">
