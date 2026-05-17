@@ -5,6 +5,7 @@ import { lookupBreachExposure, lookupPublicBreachCatalog } from "@/lib/connector
 import { lookupIndianPincode } from "@/lib/connectors/india-pincode";
 import { lookupIpContext } from "@/lib/connectors/ipapi";
 import { lookupLocation, reverseGeocode } from "@/lib/connectors/nominatim";
+import { lookupPhoneTruecaller } from "@/lib/connectors/phone-lookup";
 import { buildPublicSearchEvidence } from "@/lib/connectors/public-search";
 import { lookupPublicUsername } from "@/lib/connectors/username-lookup";
 import { lookupVehicleRc } from "@/lib/connectors/vehicle-lookup";
@@ -52,7 +53,7 @@ export async function buildIdentityProfile(
     vehicle: liveVehicle ?? baseVehicleIntel.vehicle,
     evidence: baseVehicleIntel.evidence
   };
-  const phoneIntel = buildPhoneIntelligence(input);
+  const phoneIntel = await buildPhoneIntelligence(input);
   const domainIntel = buildDomainIntelligence(input);
   const [location, github, hibp, breachCatalog, gravatar, publicUsername, pincode, ipapi] = await Promise.all([
     lookupLocation(input),
@@ -129,7 +130,7 @@ export async function buildIdentityProfile(
     id,
     createdAt,
     query: input,
-    possibleFullName: input.fullName,
+    possibleFullName: (input.fullName && input.fullName !== "Aarav Sharma" ? input.fullName : phoneIntel.phoneIntel?.callerName ?? input.fullName),
     companyName: input.companyName,
     country: locationIntel.country ?? regional.rules.label,
     city: locationIntel.city,

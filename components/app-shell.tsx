@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, Braces, Car, DatabaseZap, Eye, LayoutDashboard, Radar, ShieldCheck } from "lucide-react";
+import { Bell, Braces, Car, DatabaseZap, Eye, LayoutDashboard, Radar, ShieldCheck, Phone } from "lucide-react";
 import { Show, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { isClerkConfigured } from "@/lib/security/clerk-config";
@@ -7,6 +7,7 @@ import { isClerkConfigured } from "@/lib/security/clerk-config";
 const nav = [
   { href: "/", label: "Exposure Search", icon: Radar },
   { href: "/vehicle-info", label: "Vehicle Info", icon: Car },
+  { href: "/phone-intel", label: "Phone Intel", icon: Phone },
   { href: "/dashboard", label: "Breach Intel", icon: LayoutDashboard },
   { href: "/results/demo", label: "Watchlist", icon: Eye },
   { href: "/docs", label: "API Docs", icon: Braces },
@@ -106,8 +107,8 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       </header>
       <div className="lg:pl-72">{children}</div>
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-bg/90 px-2 py-2 backdrop-blur-xl md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
-          {nav.slice(0, 5).map((item) => (
+        <div className="mx-auto grid max-w-md grid-cols-6 gap-1">
+          {nav.slice(0, 6).map((item) => (
             <Link
               key={item.href}
               href={item.href}

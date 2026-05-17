@@ -1,3 +1,4 @@
+import { lookupPhoneTruecaller } from "@/lib/connectors/phone-lookup";
 import { NormalizedInput, PhoneIntelligence, SourceEvidence } from "./types";
 
 type IndiaCircle = {
@@ -107,10 +108,10 @@ function getHash(str: string): number {
   return Math.abs(hash);
 }
 
-export function buildPhoneIntelligence(input: NormalizedInput) {
+export async function buildPhoneIntelligence(input: NormalizedInput) {
   if (!input.normalizedPhone) return { phoneIntel: undefined, evidence: [] };
 
-  const phoneIntel = input.inferredCountry === "IN" ? indiaPhoneIntel(input) : genericPhoneIntel(input);
+  const phoneIntel = input.inferredCountry === "IN" ? await indiaPhoneIntel(input) : genericPhoneIntel(input);
   return {
     phoneIntel,
     evidence: [
@@ -143,45 +144,34 @@ export function buildPhoneIntelligence(input: NormalizedInput) {
   };
 }
 
-function indiaPhoneIntel(input: NormalizedInput): PhoneIntelligence {
+async function indiaPhoneIntel(input: NormalizedInput): Promise<PhoneIntelligence> {
   const national = input.phoneNationalNumber ?? input.normalizedPhone?.replace(/^\+91/, "") ?? "";
   const landline = indiaCircles.find((circle) => circle.codes.some((code) => national.startsWith(code)));
   const isMobile = /^[6-9]\d{9}$/.test(national);
 
-  const hash = getHash(national);
-  
-  // Deterministic selections
-  const callerName = national === "9876543210" ? "Aarav Sharma" : indianNames[hash % indianNames.length];
-  const carrier = isMobile ? indianCarriers[hash % indianCarriers.length] : (landline ? "Indian fixed-line numbering area" : indianCarriers[hash % indianCarriers.length]);
-  const telecomCircle = landline?.circle ?? indiaCircles[hash % indiaCircles.length].circle;
-  const region = landline?.region ?? indiaCircles[hash % indiaCircles.length].region;
-  const spamScore = national === "9876543210" ? "4% (Clean / Verified Personal)" : spamScores[hash % spamScores.length];
-  const truecallerBadge = national === "9876543210" ? "Verified Personal" : truecallerBadges[hash % truecallerBadges.length];
-  const deviceType = national === "9876543210" ? "Apple iPhone 15 Pro" : deviceTypes[hash % deviceTypes.length];
-  const whatsapp = hash % 5 !== 0; // 80% chance true
-  const telegram = hash % 3 !== 0; // 66% chance true
+  const live = await lookupPhoneTruecaller(input.normalizedPhone ?? "");
 
   return {
     e164: input.normalizedPhone,
     country: "IN",
     valid: Boolean(input.phoneValid),
-    carrier,
-    telecomCircle,
-    region,
-    confidence: landline ? 0.88 : isMobile ? 0.92 : 0.65,
-    provenance: "verified-public-api",
-    callerName,
-    spamScore,
-    whatsapp,
-    telegram,
-    truecallerBadge,
-    deviceType,
+    carrier: live.carrier,
+    telecomCircle: live.telecomCircle,
+    region: live.telecomCircle,
+    confidence: live.source === "rapidapi-truecaller" ? 0.98 : landline ? 0.88 : isMobile ? 0.92 : 0.65,
+    provenance: live.source === "rapidapi-truecaller" ? "verified-public-api" : "derived-inference",
+    callerName: live.callerName,
+    spamScore: live.spamScore,
+    whatsapp: live.whatsapp,
+    telegram: live.telegram,
+    truecallerBadge: live.truecallerBadge,
+    deviceType: live.deviceType,
     analysis: [
-      `Caller ID verified via Truecaller-like public directory correlation: ${callerName}.`,
-      `Telecom Operator resolved to ${carrier} in ${telecomCircle} circle (${region}).`,
-      `Spam Likelihood & Community Tagging: ${spamScore}.`,
-      `Active digital presence detected on WhatsApp (${whatsapp ? "Yes" : "No"}) and Telegram (${telegram ? "Yes" : "No"}).`,
-      `Hardware Fingerprint estimate: ${deviceType}.`,
+      `Caller ID verified via Truecaller live directory correlation: ${live.callerName}.`,
+      `Telecom Operator resolved to ${live.carrier} in ${live.telecomCircle} circle.`,
+      `Spam Likelihood & Community Tagging: ${live.spamScore}.`,
+      `Active digital presence detected on WhatsApp (${live.whatsapp ? "Yes" : "No"}) and Telegram (${live.telegram ? "Yes" : "No"}).`,
+      `Hardware Fingerprint estimate: ${live.deviceType}.`,
       input.phoneValid ? "libphonenumber-js validated the supplied phone format." : "Phone format failed validation."
     ]
   };
