@@ -7,6 +7,7 @@ import { lookupIpContext } from "@/lib/connectors/ipapi";
 import { lookupLocation, reverseGeocode } from "@/lib/connectors/nominatim";
 import { buildPublicSearchEvidence } from "@/lib/connectors/public-search";
 import { lookupPublicUsername } from "@/lib/connectors/username-lookup";
+import { lookupVehicleRc } from "@/lib/connectors/vehicle-lookup";
 import { writeAuditEvent } from "@/lib/security/audit";
 import { stableId } from "@/lib/utils";
 import { countryRules, validateRegionalInput } from "./country-engines";
@@ -45,7 +46,12 @@ export async function buildIdentityProfile(
   });
 
   const regional = validateRegionalInput(input);
-  const vehicleIntel = buildVehicleIntelligence(input);
+  const baseVehicleIntel = buildVehicleIntelligence(input);
+  const liveVehicle = await lookupVehicleRc(input, baseVehicleIntel.vehicle);
+  const vehicleIntel = {
+    vehicle: liveVehicle ?? baseVehicleIntel.vehicle,
+    evidence: baseVehicleIntel.evidence
+  };
   const phoneIntel = buildPhoneIntelligence(input);
   const domainIntel = buildDomainIntelligence(input);
   const [location, github, hibp, breachCatalog, gravatar, publicUsername, pincode, ipapi] = await Promise.all([
