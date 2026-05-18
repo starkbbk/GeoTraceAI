@@ -102,6 +102,7 @@ const SEVERITY_DOT: Record<Severity, string> = {
 /* ---------- Component ---------- */
 
 export function BreachSearchPanel() {
+  const [provider, setProvider] = useState<"leak-lookup" | "hibp">("leak-lookup");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [domain, setDomain] = useState("");
@@ -139,6 +140,7 @@ export function BreachSearchPanel() {
           headers: { "Content-Type": "application/json" },
           signal: controller.signal,
           body: JSON.stringify({
+            provider,
             email: email || undefined,
             username: username || undefined,
             domain: domain || undefined,
@@ -181,7 +183,7 @@ export function BreachSearchPanel() {
         setLoading(false);
       }
     },
-    [email, username, domain, phone, consentAccepted, hasInput]
+    [provider, email, username, domain, phone, consentAccepted, hasInput]
   );
 
   const handleRetry = () => {
@@ -205,15 +207,34 @@ export function BreachSearchPanel() {
       {/* Search Form */}
       <Card className="p-5 sm:p-6">
         <CardHeader className="mb-5">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <ShieldAlert className="h-5 w-5 text-accent-100" />
-              Leak-Lookup Breach Intelligence
-            </CardTitle>
-            <CardDescription>
-              Search public breach metadata via Leak-Lookup. Only exposure intelligence is displayed — no plaintext
-              passwords, stolen credentials, or private data.
-            </CardDescription>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <ShieldAlert className="h-5 w-5 text-accent-100" />
+                {provider === "leak-lookup" ? "Leak-Lookup Breach Intelligence" : "HIBP Breach Intelligence"}
+              </CardTitle>
+              <CardDescription>
+                Search public breach metadata via {provider === "leak-lookup" ? "Leak-Lookup" : "Have I Been Pwned"}. Only exposure intelligence is displayed — no plaintext
+                passwords, stolen credentials, or private data.
+              </CardDescription>
+            </div>
+            
+            <div className="flex shrink-0 items-center overflow-hidden rounded-md border border-white/10 bg-black/20 p-1">
+              <button
+                type="button"
+                onClick={() => setProvider("leak-lookup")}
+                className={`rounded px-3 py-1.5 text-xs font-medium transition ${provider === "leak-lookup" ? "bg-accent-500/30 text-accent-100 shadow" : "text-slate-400 hover:text-white"}`}
+              >
+                Leak-Lookup
+              </button>
+              <button
+                type="button"
+                onClick={() => setProvider("hibp")}
+                className={`rounded px-3 py-1.5 text-xs font-medium transition ${provider === "hibp" ? "bg-accent-500/30 text-accent-100 shadow" : "text-slate-400 hover:text-white"}`}
+              >
+                HIBP
+              </button>
+            </div>
           </div>
         </CardHeader>
 

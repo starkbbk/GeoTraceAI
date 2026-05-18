@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { lookupBreachExposure } from "@/lib/connectors/hibp";
 import {
   LeakLookupBreachRecord,
   LeakLookupIdentifierType,
@@ -13,6 +14,7 @@ export const runtime = "nodejs";
 
 const schema = z
   .object({
+    provider: z.enum(["leak-lookup", "hibp"]).default("leak-lookup"),
     email: z.string().email().optional().or(z.literal("")),
     username: z.string().min(2).max(80).optional().or(z.literal("")),
     domain: z.string().min(3).max(255).optional().or(z.literal("")),
@@ -62,6 +64,7 @@ export async function POST(request: Request) {
   }
 
   const inputs = normalizeInputs(parsed.data);
+  const provider = parsed.data.provider;
   const searchId = stableId("breach");
 
   writeAuditEvent({
@@ -70,20 +73,58 @@ export async function POST(request: Request) {
     target: searchId,
     metadata: {
       route: "/api/breach-search",
+      provider,
       identifierTypes: inputs.map((input) => input.type),
       identifiers: inputs.map((input) => maskIdentifier(input.query, input.type))
     }
   });
 
   try {
-    const sourceResults = await Promise.all(
-      inputs.map(({ type, query }) => searchLeakLookup({ type, query }))
-    );
-    const records = sourceResults.flatMap((result) => result.records);
-    const exposureCount = records.reduce((sum, record) => sum + record.exposureCount, 0);
+    let records: LeakLookupBreachRecord[] = [];
+    let isConfigured = false;
+    let isOk = false;
+    let sourceResults: any[] = [];
+
+    if (provider === "hibp") {
+      const emailInput = inputs.find((i) => i.type === "email");
+      if (!emailInput) {
+        return NextResponse.json({ error: "Have I Been Pwned requires an email address to search." }, { status: 400 });
+      }
+
+      const hibpResult = await lookupBreachExposure({ normalizedEmail: emailInput.query } as any);
+      isConfigured = hibpResult.enabled;
+      isOk = hibpResult.enabled;
+      records = hibpResult.records.map((r) => ({
+        id: r.id,
+        source: r.source,
+        sourceUrl: r.sourceUrl ?? "https://haveibeenpwned.com",
+        breachDate: r.firstSeen,
+        exposedFields: r.categories,
+        riskScore: r.severity === "critical" ? 95 : r.severity === "high" ? 75 : r.severity === "medium" ? 55 : 25,
+        exposureCount: 1,
+        severity: r.severity,
+        confidence: r.confidence,
+        identifierType: "email",
+        verified: r.verified,
+        inferred: r.inferred,
+        recommendation: "Rotate reused passwords and enable MFA on affected platforms.",
+        disclaimer: "HIBP metadata result"
+      }));
+      sourceResults = [{ provider: "Have I Been Pwned", configured: isConfigured, ok: isOk, cached: false }];
+    } else {
+      const results = await Promise.all(
+        inputs.map(({ type, query }) => searchLeakLookup({ type, query }))
+      );
+      sourceResults = results;
+      records = results.flatMap((result) => result.records);
+      isConfigured = results.some((result) => result.configured);
+      isOk = results.every((result) => result.ok) || records.length > 0;
+    }
+
+    const exposureCount = provider === "hibp" ? records.length : records.reduce((sum, record) => sum + record.exposureCount, 0);
     const topSeverity = getHighestSeverity(records);
     const riskScore = records.length ? Math.max(...records.map((record) => record.riskScore)) : 0;
-    const timeline = buildTimeline(records);
+    const timeline = buildTimeline(records, provider === "hibp" ? "Have I Been Pwned" : "Leak-Lookup");
 
     writeAuditEvent({
       actor: clientKey,
@@ -91,19 +132,19 @@ export async function POST(request: Request) {
       target: searchId,
       metadata: {
         route: "/api/breach-search",
-        sources: ["Leak-Lookup"],
+        sources: [provider === "hibp" ? "Have I Been Pwned" : "Leak-Lookup"],
         recordCount: records.length,
         exposureCount,
         highestSeverity: topSeverity,
-        configured: sourceResults.some((result) => result.configured)
+        configured: isConfigured
       }
     });
 
     return NextResponse.json({
       id: searchId,
-      provider: "Leak-Lookup",
-      configured: sourceResults.some((result) => result.configured),
-      ok: sourceResults.every((result) => result.ok) || records.length > 0,
+      provider: provider === "hibp" ? "Have I Been Pwned" : "Leak-Lookup",
+      configured: isConfigured,
+      ok: isOk,
       records,
       timeline,
       metrics: {
@@ -124,7 +165,7 @@ export async function POST(request: Request) {
         exposureCount: result.exposureCount,
         error: result.error
       })),
-      monitoringRecommendation: monitoringRecommendation(topSeverity, exposureCount),
+      monitoringRecommendation: monitoringRecommendation(topSeverity, exposureCount, provider === "hibp" ? "HIBP" : "Leak-Lookup"),
       summary: summaryFor(records.length, exposureCount, topSeverity),
       compliance: {
         consentAccepted: true,
@@ -151,7 +192,7 @@ export async function POST(request: Request) {
       {
         id: searchId,
         ok: false,
-        provider: "Leak-Lookup",
+        provider: parsed.data?.provider === "hibp" ? "Have I Been Pwned" : "Leak-Lookup",
         records: [],
         timeline: [],
         error: "Breach intelligence lookup is temporarily unavailable. No credential data was stored.",
@@ -176,14 +217,14 @@ function normalizeInputs(input: z.infer<typeof schema>) {
     .filter((item) => item.query.length > 0);
 }
 
-function buildTimeline(records: LeakLookupBreachRecord[]): TimelineEvent[] {
+function buildTimeline(records: LeakLookupBreachRecord[], sourceName: string): TimelineEvent[] {
   return records
     .map((record) => ({
       id: record.id,
       date: record.breachDate ?? new Date().toISOString().slice(0, 10),
       label: record.source,
       severity: record.severity,
-      source: "Leak-Lookup",
+      source: sourceName,
       detail: `${record.identifierType} exposure metadata with ${record.exposedFields.length} exposed field categories.`
     }))
     .sort((left, right) => right.date.localeCompare(left.date));
@@ -197,8 +238,8 @@ function getHighestSeverity(records: LeakLookupBreachRecord[]) {
   );
 }
 
-function monitoringRecommendation(severity: LeakLookupBreachRecord["severity"], count: number) {
-  if (count === 0) return "No Leak-Lookup breach metadata returned. Keep monitoring enabled for future public appearances.";
+function monitoringRecommendation(severity: LeakLookupBreachRecord["severity"], count: number, name: string) {
+  if (count === 0) return `No ${name} breach metadata returned. Keep monitoring enabled for future public appearances.`;
   if (severity === "critical") return "Immediate review recommended: rotate reused passwords, enforce MFA, and monitor linked identifiers.";
   if (severity === "high") return "Add to watchlist, review account recovery settings, and monitor repeated exposure overlap.";
   if (severity === "medium") return "Monitor for repeat appearances and reduce profile reuse across public platforms.";
@@ -207,7 +248,7 @@ function monitoringRecommendation(severity: LeakLookupBreachRecord["severity"], 
 
 function summaryFor(recordCount: number, exposureCount: number, severity: LeakLookupBreachRecord["severity"]) {
   if (recordCount === 0) {
-    return "No public Leak-Lookup breach metadata was returned for the submitted identifiers.";
+    return "No public breach metadata was returned for the submitted identifiers.";
   }
   return `${recordCount} breach metadata source${recordCount === 1 ? "" : "s"} returned with ${exposureCount} exposure reference${
     exposureCount === 1 ? "" : "s"
@@ -215,6 +256,7 @@ function summaryFor(recordCount: number, exposureCount: number, severity: LeakLo
 }
 
 function maskIdentifier(value: string, type: LeakLookupIdentifierType) {
+  if (!value) return "";
   if (type === "email") {
     const [local = "", domain = ""] = value.split("@");
     return `${local.slice(0, 2)}${"*".repeat(Math.max(2, local.length - 2))}@${domain}`;
