@@ -92,6 +92,12 @@ export async function POST(request: Request) {
       }
 
       const hibpResult = await lookupBreachExposure({ normalizedEmail: emailInput.query } as any);
+      
+      const errorEvidence = hibpResult.evidence.find((e) => e.title === "Breach exposure check unavailable");
+      if (errorEvidence) {
+        return NextResponse.json({ error: errorEvidence.summary }, { status: 502 });
+      }
+
       isConfigured = hibpResult.enabled;
       isOk = hibpResult.enabled;
       records = hibpResult.records.map((r) => ({
