@@ -102,7 +102,7 @@ const SEVERITY_DOT: Record<Severity, string> = {
 /* ---------- Component ---------- */
 
 export function BreachSearchPanel() {
-  const [provider, setProvider] = useState<"leak-lookup" | "hibp">("leak-lookup");
+  const [provider, setProvider] = useState<"leak-lookup" | "xon">("leak-lookup");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [domain, setDomain] = useState("");
@@ -211,10 +211,10 @@ export function BreachSearchPanel() {
             <div>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <ShieldAlert className="h-5 w-5 text-accent-100" />
-                {provider === "leak-lookup" ? "Leak-Lookup Breach Intelligence" : "HIBP Breach Intelligence"}
+                {provider === "leak-lookup" ? "Leak-Lookup Breach Intelligence" : "XposedOrNot Breach Intelligence"}
               </CardTitle>
               <CardDescription>
-                Search public breach metadata via {provider === "leak-lookup" ? "Leak-Lookup" : "Have I Been Pwned"}. Only exposure intelligence is displayed — no plaintext
+                Search public breach metadata via {provider === "leak-lookup" ? "Leak-Lookup" : "XposedOrNot (Free)"}. Only exposure intelligence is displayed — no plaintext
                 passwords, stolen credentials, or private data.
               </CardDescription>
             </div>
@@ -229,10 +229,10 @@ export function BreachSearchPanel() {
               </button>
               <button
                 type="button"
-                onClick={() => setProvider("hibp")}
-                className={`rounded px-3 py-1.5 text-xs font-medium transition ${provider === "hibp" ? "bg-accent-500/30 text-accent-100 shadow" : "text-slate-400 hover:text-white"}`}
+                onClick={() => setProvider("xon")}
+                className={`rounded px-3 py-1.5 text-xs font-medium transition ${provider === "xon" ? "bg-accent-500/30 text-accent-100 shadow" : "text-slate-400 hover:text-white"}`}
               >
-                HIBP
+                XposedOrNot (Free)
               </button>
             </div>
           </div>
