@@ -8,7 +8,7 @@ const nav = [
   { href: "/", label: "Exposure Search", icon: Radar },
   { href: "/vehicle-info", label: "Vehicle Info", icon: Car },
   { href: "/phone-intel", label: "Phone Intel", icon: Phone },
-  { href: "/dashboard", label: "HIBP Breach Intel", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Breach Intel", icon: LayoutDashboard },
   { href: "/results/demo", label: "Watchlist", icon: Eye },
   { href: "/docs", label: "API Docs", icon: Braces },
   { href: "/admin", label: "Admin", icon: ShieldCheck }
