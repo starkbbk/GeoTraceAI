@@ -45,19 +45,34 @@ export async function lookupBreachExposure(input: NormalizedInput) {
     };
   }
 
-  const response = await cachedJson<HibpBreach[]>({
-    source: "hibp",
-    cacheKey: input.normalizedEmail,
-    url: `https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(input.normalizedEmail)}?truncateResponse=false`,
-    ttlMs: 24 * 60 * 60_000,
-    minIntervalMs: 1_600,
-    init: {
-      headers: {
-        "hibp-api-key": config.hibpApiKey,
-        "User-Agent": "GeoTraceAI"
+  const apiKeys = config.hibpApiKey.split(",").map((k) => k.trim()).filter(Boolean);
+  let response;
+
+  for (let i = 0; i < apiKeys.length; i++) {
+    response = await cachedJson<HibpBreach[]>({
+      source: "hibp",
+      cacheKey: `${input.normalizedEmail}-k${i}`,
+      url: `https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(input.normalizedEmail)}?truncateResponse=false`,
+      ttlMs: 24 * 60 * 60_000,
+      minIntervalMs: 1_600,
+      init: {
+        headers: {
+          "hibp-api-key": apiKeys[i],
+          "User-Agent": "GeoTraceAI"
+        }
       }
+    });
+
+    // If successful, or if it's a 404 (no breach, which is a successful valid response), stop rotating
+    if (response.ok || response.status === 404) {
+      break;
     }
-  });
+  }
+
+  // Fallback if all keys fail or response is undefined
+  if (!response) {
+    return { evidence: [], records: [], breachCount: 0, enabled: true };
+  }
 
   if (response.status === 404) {
     return {
