@@ -86,7 +86,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
                 <Show when="signed-out">
                   <Link
                     href="/sign-in"
-                    className="hidden rounded-md border border-accent-300/30 bg-accent-500/15 px-3 py-2 text-sm font-medium text-accent-100 transition hover:bg-accent-500/25 sm:inline-flex"
+                    className="rounded-md border border-accent-300/30 bg-accent-500/15 px-2.5 py-1.5 text-xs font-medium text-accent-100 transition hover:bg-accent-500/25 sm:px-3 sm:py-2 sm:text-sm"
                   >
                     Sign in
                   </Link>
